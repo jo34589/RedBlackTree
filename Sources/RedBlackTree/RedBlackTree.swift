@@ -82,8 +82,26 @@ struct RBtree<T: Comparable> {
         }
     }
     
-    func check_uncle_color(at node: UnsafeMutablePointer<RBnode<T>>) -> Bool {
-        
+    func check_uncle_color(at node: UnsafeMutablePointer<RBnode<T>>) -> Bool? {
+        guard let pnode = node.pointee.parent else {
+            return nil
+        }
+        guard let gpnode = pnode.pointee.parent else {
+            return nil
+        }
+        if gpnode.pointee.left == pnode {
+            if gpnode.pointee.right == nil {
+                return black
+            } else {
+                return gpnode.pointee.right!.pointee.color
+            }
+        } else {
+            if gpnode.pointee.left == nil {
+                return black
+            } else {
+                return gpnode.pointee.left!.pointee.color
+            }
+        }
     }
     
     mutating func rotate_left(at node:UnsafeMutablePointer<RBnode<T>>) {
