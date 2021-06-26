@@ -104,20 +104,50 @@ struct RBtree<T: Comparable> {
         }
     }
     
-    mutating func rotate_left(at node:UnsafeMutablePointer<RBnode<T>>) {
-        
-    }
-    
-    mutating func rotate_right(at node: UnsafeMutablePointer<RBnode<T>>) {
-        
-    }
-    
     mutating func recolor(at node: UnsafeMutablePointer<RBnode<T>>) {
         
     }
     
     mutating func restructure(at node: UnsafeMutablePointer<RBnode<T>>) {
         
+    }
+    
+    mutating func rotate_left(at node:UnsafeMutablePointer<RBnode<T>>) -> Bool {
+        guard let rnode = node.pointee.right else {
+            return false
+        }
+        rnode.pointee.parent = node.pointee.parent
+        node.pointee.parent = rnode
+        if let lnode = rnode.pointee.left {
+            lnode.pointee.parent = node
+            node.pointee.right = lnode
+        } else {
+            node.pointee.right = nil
+        }
+        rnode.pointee.left = node
+        /*
+         check double red and resolve
+         */
+        return true
+    }
+    
+    mutating func rotate_right(at node: UnsafeMutablePointer<RBnode<T>>) -> Bool {
+        guard let lnode = node.pointee.left else {
+            return false
+        }
+        lnode.pointee.parent = node.pointee.parent
+        node.pointee.parent = lnode
+        if let rnode = lnode.pointee.right {
+            rnode.pointee.parent = node
+            node.pointee.left = rnode
+        } else {
+            node.pointee.left = nil
+        }
+        lnode.pointee.right = node
+        /*
+         check double red and resolve
+         */
+        return true
     }
     
     mutating func insert(node: UnsafeMutablePointer<RBnode<T>>) -> Bool {
@@ -141,6 +171,7 @@ struct RBtree<T: Comparable> {
                     current.pointee.left = node
                 }
             } else {
+                //node.pointee.val >= current.pointee.val
                 depth += 1
                 if current.pointee.right != nil {
                     current = current.pointee.right!
@@ -154,7 +185,7 @@ struct RBtree<T: Comparable> {
         
         current = node
         while !check_doublered(at: current) {
-            
+            //check uncld and resolve double red
         }
         
         return true
@@ -165,16 +196,19 @@ struct RBtree<T: Comparable> {
         return insert(node: &node)
     }
     
-    mutating func delete(node: UnsafeMutablePointer<RBnode<T>>) -> UnsafeMutablePointer<RBnode<T>> {
+    func find(val: Int) -> UnsafeMutablePointer<RBnode<T>>? {
         
     }
     
-    mutating func delete(val: Int) -> Bool {
+    mutating func delete(node: UnsafeMutablePointer<RBnode<T>>) -> UnsafeMutablePointer<RBnode<T>>? {
         
     }
     
-    func find(val: Int) -> UnsafeMutablePointer<RBnode<T>> {
-        
+    mutating func delete(val: Int) -> UnsafeMutablePointer<RBnode<T>>? {
+        guard let node_to_del = self.find(val: val) else {
+            return nil
+        }
+        return delete(node: node_to_del)
     }
     
     func get_val(node: UnsafeMutablePointer<RBnode<T>>) -> T {
