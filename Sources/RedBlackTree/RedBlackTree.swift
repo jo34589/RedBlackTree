@@ -104,12 +104,134 @@ struct RBtree<T: Comparable> {
         }
     }
     
-    mutating func recolor(at node: UnsafeMutablePointer<RBnode<T>>) {
+    mutating func recolor(at node: UnsafeMutablePointer<RBnode<T>>) -> Bool? {
         
+        guard let pnode = node.pointee.parent else {
+            return nil
+        }
+        guard let gpnode = pnode.pointee.parent else {
+            return nil
+        }
+        var uncle:UnsafeMutablePointer<RBnode<T>>?
+        if gpnode.pointee.left == pnode {
+            uncle = gpnode.pointee.right
+        } else if gpnode.pointee.right == pnode {
+            uncle = gpnode.pointee.left
+        }
+        pnode.pointee.color = black
+        uncle!.pointee.color = black
+        gpnode.pointee.color = red
+        if gpnode == root {
+            gpnode.pointee.color = black
+        }
+        return true
     }
     
-    mutating func restructure(at node: UnsafeMutablePointer<RBnode<T>>) {
+    mutating func restructure(at node: UnsafeMutablePointer<RBnode<T>>) -> Bool? {
         
+        guard let pnode = node.pointee.parent else {
+            return nil
+        }
+        guard let gpnode = pnode.pointee.parent else {
+            return nil
+        }
+        if pnode == gpnode.pointee.right && node == pnode.pointee.right {
+            //case1: gp <= p <= n
+            let zero = gpnode.pointee.parent
+            let one = gpnode.pointee.left
+            let two = pnode.pointee.left
+            let three = node.pointee.left
+            let four = node.pointee.right
+            
+            gpnode.pointee.parent = pnode
+            node.pointee.parent = pnode
+            pnode.pointee.right = node
+            pnode.pointee.left = gpnode
+            
+            pnode.pointee.parent = zero
+            gpnode.pointee.left = one
+            gpnode.pointee.right = two
+            node.pointee.left = three
+            node.pointee.right = four
+            
+            pnode.pointee.color = black
+            gpnode.pointee.color = red
+            node.pointee.color = red
+            
+        } else if pnode == gpnode.pointee.left && node == pnode.pointee.right {
+            //caes2: p <= n < gp
+            let zero = gpnode.pointee.parent
+            let one = pnode.pointee.left
+            let two = node.pointee.left
+            let three = node.pointee.right
+            let four = pnode.pointee.right
+            
+            node.pointee.right = gpnode
+            node.pointee.left = pnode
+            pnode.pointee.parent = node
+            gpnode.pointee.parent = node
+            
+            node.pointee.parent = zero
+            pnode.pointee.left = one
+            pnode.pointee.right = two
+            gpnode.pointee.left = three
+            gpnode.pointee.right = four
+            
+            node.pointee.color = black
+            pnode.pointee.color = red
+            gpnode.pointee.color = red
+            
+        } else if pnode == gpnode.pointee.right && node == pnode.pointee.left {
+            //case3: gp < n <= p
+            let zero = gpnode.pointee.parent
+            let one = gpnode.pointee.left
+            let two = node.pointee.left
+            let three = node.pointee.right
+            let four = pnode.pointee.right
+            
+            node.pointee.right = pnode
+            node.pointee.left = gpnode
+            gpnode.pointee.parent = node
+            pnode.pointee.parent = node
+            
+            node.pointee.parent = zero
+            gpnode.pointee.left = one
+            gpnode.pointee.right = two
+            pnode.pointee.left = three
+            pnode.pointee.right = four
+            
+            node.pointee.color = black
+            pnode.pointee.color = red
+            gpnode.pointee.color = red
+            
+        } else if pnode == gpnode.pointee.left && node == pnode.pointee.left {
+            //case4: n <= p <= gp
+            let zero = gpnode.pointee.parent
+            let one = node.pointee.left
+            let two = node.pointee.right
+            let three = pnode.pointee.right
+            let four = gpnode.pointee.right
+            
+            pnode.pointee.left = node
+            pnode.pointee.right = gpnode
+            node.pointee.parent = pnode
+            gpnode.pointee.parent = pnode
+            
+            pnode.pointee.parent = zero
+            node.pointee.left = one
+            node.pointee.right = two
+            gpnode.pointee.left = three
+            gpnode.pointee.right = four
+            
+            pnode.pointee.color = black
+            node.pointee.color = red
+            gpnode.pointee.color = red
+            
+        } else {
+            print("error in restructure")
+            return false
+        }
+        return true
     }
     
     mutating func rotate_left(at node:UnsafeMutablePointer<RBnode<T>>) -> Bool {
@@ -196,16 +318,36 @@ struct RBtree<T: Comparable> {
         return insert(node: &node)
     }
     
-    func find(val: Int) -> UnsafeMutablePointer<RBnode<T>>? {
-        
+    func locate(val: T) -> UnsafeMutablePointer<RBnode<T>>? {
+        var current = root
+        while current != nil {
+            if current!.pointee.val == val {
+                if current!.pointee.right != nil {
+                    if current!.pointee.right!.pointee.val == val {
+                        current = current!.pointee.right
+                    } else {
+                       return current
+                    }
+                } else {
+                    return current
+                }
+            } else {
+                if current!.pointee.val > val {
+                    current = current!.pointee.left
+                } else if current!.pointee.val < val {
+                    current = current!.pointee.right
+                }
+            }
+        }
+        return nil
     }
     
     mutating func delete(node: UnsafeMutablePointer<RBnode<T>>) -> UnsafeMutablePointer<RBnode<T>>? {
         
     }
     
-    mutating func delete(val: Int) -> UnsafeMutablePointer<RBnode<T>>? {
-        guard let node_to_del = self.find(val: val) else {
+    mutating func delete(val: T) -> UnsafeMutablePointer<RBnode<T>>? {
+        guard let node_to_del = self.locate(val: val) else {
             return nil
         }
         return delete(node: node_to_del)
