@@ -8,7 +8,6 @@ struct RBnode<T: Comparable> {
     
     var val:T
     var color:Bool = red
-    var depth = 0
     var parent:UnsafeMutablePointer<RBnode<T>>?
     var left:UnsafeMutablePointer<RBnode<T>>?
     var right:UnsafeMutablePointer<RBnode<T>>?
@@ -328,29 +327,23 @@ struct RBtree<T: Comparable> {
             root = node
             size += 1
             root!.pointee.color = black
-            root!.pointee.depth = 1
             return true
         }
-        var depth = 0
         var current = root!
         while node.pointee.parent == nil {
             if node.pointee.val < current.pointee.val {
-                depth += 1
                 if current.pointee.left != nil {
                     current = current.pointee.left!
                 } else {
                     node.pointee.parent = current
-                    node.pointee.depth = depth
                     current.pointee.left = node
                 }
             } else {
                 //node.pointee.val >= current.pointee.val
-                depth += 1
                 if current.pointee.right != nil {
                     current = current.pointee.right!
                 } else {
                     node.pointee.parent = current
-                    node.pointee.depth = depth
                     current.pointee.right = node
                 }
             }
@@ -370,6 +363,7 @@ struct RBtree<T: Comparable> {
     }
     
     func locate(val: T) -> UnsafeMutablePointer<RBnode<T>>? {
+        //returns a single deepest node if there are multiple nodes with same value with the parameter val
         var current = root
         while current != nil {
             if current!.pointee.val == val {
@@ -394,7 +388,62 @@ struct RBtree<T: Comparable> {
     }
     
     mutating func delete(node: UnsafeMutablePointer<RBnode<T>>) -> UnsafeMutablePointer<RBnode<T>>? {
+        //returns a deleted node
+        //return nil if there are no node that meets the parameter.
+        //threre are some cases that deleted node are not exactly same with the node in parameter
+        //https://www.geeksforgeeks.org/red-black-tree-set-3-delete-2/
+        //https://www.geeksforgeeks.org/binary-search-tree-set-2-delete/
         
+        //will deal about color later....
+        
+        guard !self.isEmpty() else {
+            return nil
+        }
+        guard self.count() != 1 else {
+            if node == root {
+                self.root = nil
+                self.size -= 1
+                return node
+            } else {
+                return nil
+            }
+        }
+        var node_to_del = node
+        //standard bst deletion
+        if node_to_del.pointee.left != nil && node_to_del.pointee.right != nil {
+            //2childeren, node_to_del is internal node => selected node_to_del will be predecessor or successor which is always a leaf node or a node with one child.
+            //finding inorder successor
+            let order = self.inorder_traversal()
+            guard let i = order.firstIndex(of: node_to_del) else {
+                return nil
+            }
+            if i == self.count()-1 {
+                node_to_del = order[i-1]
+            } else {
+                //default: successor
+                node_to_del = order[i+1]
+            }
+            //copy val to node
+            node.pointee.val = node_to_del.pointee.val
+            //recursive call delete to node_to_del
+            return delete(node: node_to_del)
+        } else if node_to_del.pointee.left == nil && node_to_del.pointee.right == nil {
+            //no children = leaf node = just delete it.
+            let pnode = node_to_del.pointee.parent!
+            if pnode.pointee.left == node_to_del {
+                pnode.pointee.left = nil
+            } else {
+                pnode.pointee.right = nil
+            }
+            node_to_del.pointee.parent = nil
+            return node_to_del
+        } else {
+            //one child
+            
+        }
+        
+        self.size -= 1
+        return node_to_del
     }
     
     mutating func delete(val: T) -> UnsafeMutablePointer<RBnode<T>>? {
