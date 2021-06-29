@@ -13,9 +13,6 @@ struct RBnode<T: Comparable> {
     var left:UnsafeMutablePointer<RBnode<T>>?
     var right:UnsafeMutablePointer<RBnode<T>>?
     
-    mutating func change_val(val: T) {
-        self.val = val
-    }
 }
 
 struct RBtree<T: Comparable> {
@@ -69,6 +66,60 @@ struct RBtree<T: Comparable> {
             return nil
         }
         return min_node()!.pointee.val
+    }
+    
+    func preorder_traversal() -> [UnsafeMutablePointer<RBnode<T>>] {
+        //dfs
+        var order:[UnsafeMutablePointer<RBnode<T>>] = []
+        
+        func dfs(from node: UnsafeMutablePointer<RBnode<T>>?) {
+            guard node != nil else {
+                return
+            }
+            order.append(node!)
+            dfs(from: node!.pointee.left)
+            dfs(from: node!.pointee.right)
+        }
+        
+        dfs(from: root)
+        
+        return order
+    }
+    
+    func inorder_traversal() -> [UnsafeMutablePointer<RBnode<T>>] {
+        
+        var order:[UnsafeMutablePointer<RBnode<T>>] = []
+        
+        func search(from node: UnsafeMutablePointer<RBnode<T>>?) {
+            guard node != nil else {
+                return
+            }
+            search(from: node!.pointee.left)
+            order.append(node!)
+            search(from: node!.pointee.right)
+        }
+        
+        search(from: root)
+        
+        return order
+    }
+    
+    func postorder_traversal() -> [UnsafeMutablePointer<RBnode<T>>] {
+        
+        var order:[UnsafeMutablePointer<RBnode<T>>] = []
+        
+        func search(from node: UnsafeMutablePointer<RBnode<T>>?) {
+            guard node != nil else {
+                return
+            }
+            search(from: node!.pointee.left)
+            search(from: node!.pointee.right)
+            order.append(node!)
+        }
+        
+        search(from: root)
+        
+        return order
     }
     
     func check_doublered(at node: UnsafeMutablePointer<RBnode<T>>) -> Bool {
@@ -248,7 +299,7 @@ struct RBtree<T: Comparable> {
         }
         rnode.pointee.left = node
         /*
-         check double red and resolve
+         check double red and resolve maybe?
          */
         return true
     }
@@ -267,7 +318,7 @@ struct RBtree<T: Comparable> {
         }
         lnode.pointee.right = node
         /*
-         check double red and resolve
+         check double red and resolve maybe?
          */
         return true
     }
@@ -353,15 +404,7 @@ struct RBtree<T: Comparable> {
         return delete(node: node_to_del)
     }
     
-    func get_val(node: UnsafeMutablePointer<RBnode<T>>) -> T {
-        
-    }
-    
-    mutating func change_val(of node: UnsafeMutablePointer<RBnode<T>>, to val: T) -> Bool {
-        
-    }
-    
-    func visualize() {
+    func describe() {
         
     }
 }
